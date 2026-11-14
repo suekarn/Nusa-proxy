@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dipakai oleh ConfigFilesActivity dan FileEditorActivity di AndroidManifest.xml -->
+    <string name="cfg_config_files">Config Files</string>
+
+    <!-- Tambahkan string cfg_ lain di bawah ini jika skrip pengecek menemukan yang hilang.
+         Contoh format:
+    <string name="cfg_contoh">Teks contoh</string>
+    -->
+</resources>

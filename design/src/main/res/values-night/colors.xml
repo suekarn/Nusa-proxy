@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="color_icon_chip_bg">#33D9B178</color>
+    <color name="color_card_stroke">#262FFFFFF</color>
+</resources>

@@ -1,0 +1,63 @@
+name: Build Nusa Proxy
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Checkout submodules
+        run: git submodule update --init --recursive --force
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        with:
+          go-download-base-url: 'https://github.com/MetaCubeX/go/releases/download/build'
+          go-version: '1.26'
+
+      - name: Apply Go patches
+        run: |
+          cd $(go env GOROOT)
+          for p in $GITHUB_WORKSPACE/.github/patch/*.patch; do patch --verbose -p 1 < "$p"; done
+
+      - name: Update CA
+        run: |
+          sudo apt-get update && sudo apt-get install -y ca-certificates
+          sudo update-ca-certificates
+          cp -f /etc/ssl/certs/ca-certificates.crt core/src/foss/golang/clash/component/ca/ca-certificates.crt
+
+      # Keystore milik sendiri. Kalau ada secret KEYSTORE_BASE64, dipakai; kalau tidak, dibuat baru.
+      - name: Prepare signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          PASS="${KEYSTORE_PASSWORD:-nusaproxy}"
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
+          else
+            rm -f release.keystore
+            keytool -genkeypair -v -keystore release.keystore -alias nusa \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$PASS" -keypass "$PASS" -dname "CN=Nusa Proxy"
+          fi
+          printf 'keystore.password=%s\nkey.alias=nusa\nkey.password=%s\n' "$PASS" "$PASS" > signing.properties
+
+      - name: Build APK
+        run: ./gradlew --no-daemon app:assembleMetaRelease
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: NusaProxy-APK
+          path: app/build/outputs/apk/meta/release/*.apk
