@@ -20,13 +20,24 @@ object Dashboard {
     const val PROXY_PORT = 7890
     private const val ASSET_DIR = "yacd"
 
-    /** Salin file YACD ke folder profil bila belum ada. */
+    /** Naikkan angka ini setiap file YACD di assets berubah, agar profil lama ikut diperbarui. */
+    private const val UI_VERSION = 2
+    private const val UI_VERSION_FILE = ".nusa_ui_version"
+
+    /** Salin file YACD ke folder profil bila belum ada atau versinya lebih lama. */
     fun install(context: Context, uuid: UUID) {
         val target = context.importedDir.resolve(uuid.toString()).resolve("ui")
+        val marker = target.resolve(UI_VERSION_FILE)
 
-        if (target.resolve("index.html").exists()) return
+        val upToDate = target.resolve("index.html").exists() &&
+                marker.exists() &&
+                marker.readText().trim() == UI_VERSION.toString()
+
+        if (upToDate) return
 
         copyAsset(context, ASSET_DIR, target)
+
+        marker.writeText(UI_VERSION.toString())
     }
 
     private fun copyAsset(context: Context, path: String, target: File) {

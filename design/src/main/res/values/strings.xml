@@ -396,4 +396,27 @@
     <string name="hotspot_info_message">On the other device, set a manual proxy (HTTP or SOCKS5) to:</string>
     <string name="hotspot_info_warning">Anyone connected to your hotspot can use this proxy. Turn this option off when you are done, and reconnect after changing it.</string>
     <string name="hotspot_no_address">No network address found. Turn on the hotspot first.</string>
+    <string name="cfg_config_files">Config Files</string>
+    <string name="cfg_config_files_here">Browse and edit config, provider and rule files</string>
+    <string name="cfg_empty_folder">This folder is empty</string>
+    <string name="cfg_new_file">New file</string>
+    <string name="cfg_new_folder">New folder</string>
+    <string name="cfg_import_file">Import file</string>
+    <string name="cfg_rename">Rename</string>
+    <string name="cfg_export">Export</string>
+    <string name="cfg_delete">Delete</string>
+    <string name="cfg_delete_confirm">Delete %1$s?</string>
+    <string name="cfg_protected">config.yaml is the main config and can\'t be renamed or deleted here</string>
+    <string name="cfg_exists">A file or folder with that name already exists</string>
+    <string name="cfg_not_editable">This file is binary or too large to edit here</string>
+    <string name="cfg_file_saved">File saved</string>
+    <string name="cfg_discard">Discard unsaved changes?</string>
+    <string name="cfg_template_title">Start from</string>
+    <string name="cfg_template_empty">Empty file</string>
+    <string name="cfg_template_proxy_provider">Proxy provider</string>
+    <string name="cfg_template_rule_provider">Rule provider (domain list)</string>
+    <string name="cfg_adblock">Block ads</string>
+    <string name="cfg_adblock_on">Ad blocking enabled</string>
+    <string name="cfg_adblock_off">Ad blocking disabled</string>
+    <string name="cfg_adblock_unsupported">Can\'t add ad blocking: write \"rules:\" and \"rule-providers:\" as normal blocks (not on one line like [] or {})</string>
 </resources>

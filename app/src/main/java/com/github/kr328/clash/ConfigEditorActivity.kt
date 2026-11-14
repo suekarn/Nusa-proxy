@@ -19,6 +19,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
+import java.io.File
 import com.github.kr328.clash.design.R as DesignR
 
 /**
@@ -26,20 +27,30 @@ import com.github.kr328.clash.design.R as DesignR
  * dibuat profil File baru berisi teks tersebut, diaktifkan, lalu profil lama dihapus.
  */
 class ConfigEditorActivity : BaseActivity<ConfigEditorDesign>() {
+    /** True bila config aktif memuat blok iklan (diatur lewat menu "Block ads"). */
+    private var adBlock = false
+
     override suspend fun main() {
         val design = ConfigEditorDesign(this)
 
         setContentDesign(design)
 
         design.setText(loadConfig())
+        design.adBlockEnabled = adBlock
 
         while (isActive) {
             select<Unit> {
                 design.requests.onReceive {
                     when (it) {
                         ConfigEditorDesign.Request.Back -> finish()
-                        ConfigEditorDesign.Request.Save -> save(design)
+                        ConfigEditorDesign.Request.Save -> {
+                            save(design)
+                            Unit
+                        }
                         ConfigEditorDesign.Request.Add -> showAddDialog(design)
+                        ConfigEditorDesign.Request.OpenFiles ->
+                            startActivity(ConfigFilesActivity::class.intent)
+                        ConfigEditorDesign.Request.ToggleAdBlock -> toggleAdBlock(design)
                         ConfigEditorDesign.Request.OpenDashboard ->
                             if (clashRunning) {
                                 startActivity(DashboardActivity::class.intent)
@@ -60,27 +71,61 @@ class ConfigEditorActivity : BaseActivity<ConfigEditorDesign>() {
         return withContext(Dispatchers.IO) {
             val file = importedDir.resolve(active.uuid.toString()).resolve("config.yaml")
 
-            if (file.exists()) ProxyLink.unwrap(file.readText()) else ""
+            if (file.exists()) {
+                val raw = file.readText()
+
+                adBlock = AdBlock.isEnabled(raw)
+
+                // blok iklan dikelola aplikasi: disembunyikan dari editor, disisipkan lagi saat simpan
+                ProxyLink.unwrap(AdBlock.remove(raw))
+            } else {
+                adBlock = false
+
+                ""
+            }
         }
     }
 
-    private suspend fun save(design: ConfigEditorDesign) {
-        val text = ProxyLink.wrap(design.getText())
+    /** Simpan config. Mengembalikan true bila berhasil. */
+    private suspend fun save(design: ConfigEditorDesign): Boolean {
+        var text = ProxyLink.wrap(design.getText())
 
         if (text.isBlank()) {
             design.showToast(DesignR.string.config_empty, ToastDuration.Short)
 
-            return
+            return false
         }
 
-        try {
+        if (adBlock) {
+            val withAds = AdBlock.add(text)
+
+            if (withAds == null) {
+                design.showToast(DesignR.string.cfg_adblock_unsupported, ToastDuration.Long)
+
+                return false
+            }
+
+            text = withAds
+        } else {
+            text = AdBlock.remove(text)
+        }
+
+        return try {
             val pendingRoot = pendingDir
+            val importedRoot = importedDir
+            val keepAdList = adBlock
 
             withProfile {
                 val old = queryActive()
                 val uuid = create(Profile.Type.File, "NUSA-PROXY")
+                val pending = pendingRoot.resolve(uuid.toString())
 
-                pendingRoot.resolve(uuid.toString()).resolve("config.yaml").writeText(text)
+                pending.resolve("config.yaml").writeText(text)
+
+                // berkas lain di folder profil lama (provider, aturan buatan sendiri) ikut dibawa
+                if (old != null) {
+                    carryOverFiles(importedRoot.resolve(old.uuid.toString()), pending, keepAdList)
+                }
 
                 commit(uuid)
 
@@ -98,8 +143,57 @@ class ConfigEditorActivity : BaseActivity<ConfigEditorDesign>() {
             }
 
             design.showToast(DesignR.string.config_saved, ToastDuration.Short)
+
+            true
         } catch (e: Exception) {
             design.showToast(e.message ?: e.toString(), ToastDuration.Long)
+
+            false
+        }
+    }
+
+    /**
+     * Salin isi folder profil lama ke folder profil baru, kecuali config.yaml (baru saja ditulis),
+     * `ui` (dipasang ulang oleh Dashboard) dan berkas tersembunyi. Berusaha sebaik mungkin:
+     * kegagalan menyalin tidak membatalkan penyimpanan config.
+     */
+    private fun carryOverFiles(source: File, target: File, keepAdList: Boolean) {
+        if (!source.isDirectory) return
+
+        source.listFiles()?.forEach { child ->
+            if (child.name == "config.yaml" || child.name == "ui" || child.name.startsWith(".")) {
+                return@forEach
+            }
+
+            try {
+                child.copyRecursively(target.resolve(child.name), overwrite = false)
+            } catch (e: Exception) {
+                // lewati berkas yang gagal disalin
+            }
+        }
+
+        if (!keepAdList) {
+            try {
+                target.resolve(AdBlock.PROVIDER_PATH).delete()
+            } catch (e: Exception) {
+                // abaikan
+            }
+        }
+    }
+
+    private suspend fun toggleAdBlock(design: ConfigEditorDesign) {
+        val previous = adBlock
+
+        adBlock = !previous
+
+        if (save(design)) {
+            design.adBlockEnabled = adBlock
+            design.showToast(
+                if (adBlock) DesignR.string.cfg_adblock_on else DesignR.string.cfg_adblock_off,
+                ToastDuration.Short
+            )
+        } else {
+            adBlock = previous
         }
     }
 

@@ -55,48 +55,40 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/main_padding_horizontal_negative"
-                    android:layout_marginBottom="@dimen/main_card_margin_vertical"
-                    android:background="@drawable/bg_hero_banner"
-                    android:orientation="vertical"
-                    android:paddingHorizontal="@dimen/hero_banner_padding"
-                    android:paddingVertical="@dimen/hero_banner_padding"
-                    android:theme="@style/AppThemeDark">
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/main_top_banner_height"
+                    android:orientation="horizontal">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingBottom="@dimen/hero_banner_padding">
+                    <FrameLayout
+                        android:layout_width="@dimen/large_item_header_layout_size"
+                        android:layout_height="@dimen/large_item_header_layout_size">
 
                         <View
                             android:layout_width="@dimen/main_logo_size"
                             android:layout_height="@dimen/main_logo_size"
+                            android:layout_gravity="center"
                             android:background="@drawable/ic_clash" />
+                    </FrameLayout>
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"
-                            android:letterSpacing="0.02"
-                            android:text="@string/kentang_title"
-                            android:textColor="@color/color_on_hero"
-                            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <com.github.kr328.clash.design.view.LargeActionCard
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:onClick="@{() -> self.request(Request.ToggleStatus)}"
-                        app:cardBackgroundColor="@{clashRunning ? @color/color_hero_pill_started : @color/color_hero_pill_stopped}"
-                        app:icon="@{clashRunning ? @drawable/ic_outline_check_circle : @drawable/ic_outline_not_interested}"
-                        app:subtext="@{clashRunning ? @string/format_traffic_forwarded(forwarded) : @string/tap_to_start}"
-                        app:text="@{clashRunning ? @string/running : @string/stopped}">
-                        <requestFocus />
-                    </com.github.kr328.clash.design.view.LargeActionCard>
+                        android:text="@string/kentang_title"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
                 </LinearLayout>
+
+                <com.github.kr328.clash.design.view.LargeActionCard
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="@dimen/main_card_margin_vertical"
+                    android:onClick="@{() -> self.request(Request.ToggleStatus)}"
+                    android:theme="@style/AppThemeDark"
+                    app:cardBackgroundColor="@{clashRunning ? colorClashStarted : colorClashStopped}"
+                    app:icon="@{clashRunning ? @drawable/ic_outline_check_circle : @drawable/ic_outline_not_interested}"
+                    app:subtext="@{clashRunning ? @string/format_traffic_forwarded(forwarded) : @string/tap_to_start}"
+                    app:text="@{clashRunning ? @string/running : @string/stopped}">
+                    <requestFocus />
+                </com.github.kr328.clash.design.view.LargeActionCard>
 
                 <com.github.kr328.clash.design.view.LargeActionCard
                     android:layout_width="match_parent"
@@ -104,10 +96,7 @@
                     android:layout_marginVertical="@dimen/main_card_margin_vertical"
                     android:onClick="@{() -> self.request(Request.OpenProxy)}"
                     android:visibility="@{clashRunning ? View.VISIBLE : View.GONE}"
-                    app:cardBackgroundColor="?attr/colorSurface"
                     app:icon="@drawable/ic_baseline_apps"
-                    app:strokeColor="@color/color_card_stroke"
-                    app:strokeWidth="1dp"
                     app:subtext="@{mode}"
                     app:text="@string/proxy" />
 
@@ -116,12 +105,22 @@
                     android:layout_height="wrap_content"
                     android:layout_marginVertical="@dimen/main_card_margin_vertical"
                     android:onClick="@{() -> self.request(Request.OpenConfigEditor)}"
-                    app:cardBackgroundColor="?attr/colorSurface"
                     app:icon="@drawable/ic_baseline_edit"
-                    app:strokeColor="@color/color_card_stroke"
-                    app:strokeWidth="1dp"
                     app:subtext="@string/edit_config_here"
                     app:text="@string/edit_config" />
+
+                <com.github.kr328.clash.design.view.LargeActionCard
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="@dimen/main_card_margin_vertical"
+                    android:onClick="@{() -> self.request(Request.OpenConfigFiles)}"
+                    app:icon="@drawable/ic_outline_folder"
+                    app:subtext="@string/cfg_config_files_here"
+                    app:text="@string/cfg_config_files" />
+
+                
+
+                
 
                 <com.github.kr328.clash.design.view.LargeActionLabel
                     android:layout_width="match_parent"
@@ -139,6 +138,8 @@
                     android:onClick="@{() -> self.request(Request.OpenSettings)}"
                     app:icon="@drawable/ic_baseline_settings"
                     app:text="@string/settings" />
+
+                
 
                 <com.github.kr328.clash.design.view.LargeActionLabel
                     android:layout_width="match_parent"
